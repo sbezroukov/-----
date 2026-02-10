@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  quizapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quizapp
+    container_name: quizapp
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    volumes:
+      - quizdb:/app/data
+      - ./tests:/app/tests
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/quiz.db
+
+volumes:
+  quizdb:

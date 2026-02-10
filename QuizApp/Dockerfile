@@ -14,5 +14,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 COPY tests ./tests
+VOLUME ["/app/data"]
 ENTRYPOINT ["dotnet", "QuizApp.dll"]
 
