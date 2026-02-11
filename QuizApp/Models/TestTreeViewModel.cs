@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuizApp.Utils;
 
 namespace QuizApp.Models;
 
@@ -22,15 +23,6 @@ public class TestTreeNode
     public List<Topic> Topics { get; set; } = new();
 
     /// <summary>
-    /// Нормализует путь к разделителю текущей ОС (в БД пути хранятся с \ для совместимости).
-    /// </summary>
-    private static string NormalizePath(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return path;
-        return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-    }
-
-    /// <summary>
     /// Строит дерево из плоского списка тем по путям папок.
     /// </summary>
     public static TestTreeNode BuildTree(IEnumerable<Topic> topics)
@@ -40,7 +32,7 @@ public class TestTreeNode
         var pathSet = new HashSet<string> { "" };
         foreach (var t in topics)
         {
-            var fileNameNorm = NormalizePath(t.FileName);
+            var fileNameNorm = PathHelper.Normalize(t.FileName);
             var dir = Path.GetDirectoryName(fileNameNorm);
             if (string.IsNullOrEmpty(dir)) dir = "";
             pathSet.Add(dir);
@@ -80,7 +72,7 @@ public class TestTreeNode
         // Раскладываем темы по узлам
         foreach (var t in topics)
         {
-            var fileNameNorm = NormalizePath(t.FileName);
+            var fileNameNorm = PathHelper.Normalize(t.FileName);
             var dir = Path.GetDirectoryName(fileNameNorm);
             if (string.IsNullOrEmpty(dir)) dir = "";
             pathToNode[dir].Topics.Add(t);

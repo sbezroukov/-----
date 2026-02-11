@@ -1,3 +1,4 @@
+@model QuizApp.Models.LoginViewModel
 @{
     ViewData["Title"] = "Вход";
 }
@@ -9,13 +10,16 @@
                 <h2 class="card-title mb-4 text-center">Вход пользователя</h2>
 
                 <form asp-action="Login" method="post">
+                    <input type="hidden" asp-for="ReturnUrl" />
                     <div class="mb-3">
-                        <label for="userName" class="form-label">Логин</label>
-                        <input type="text" class="form-control" id="userName" name="userName" required />
+                        <label asp-for="UserName" class="form-label"></label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="password" name="password" required />
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Войти</button>
                 </form>
@@ -31,3 +35,6 @@
     </div>
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

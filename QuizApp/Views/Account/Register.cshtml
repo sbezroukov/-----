@@ -1,3 +1,4 @@
+@model QuizApp.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Регистрация";
 }
@@ -10,12 +11,14 @@
 
                 <form asp-action="Register" method="post">
                     <div class="mb-3">
-                        <label for="userName" class="form-label">Логин</label>
-                        <input type="text" class="form-control" id="userName" name="userName" required />
+                        <label asp-for="UserName" class="form-label"></label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="password" name="password" required />
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
                     <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
                 </form>
@@ -31,3 +34,6 @@
     </div>
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

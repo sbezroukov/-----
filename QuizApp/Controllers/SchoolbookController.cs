@@ -2,10 +2,11 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using QuizApp.Models;
+using QuizApp.Utils;
 
 namespace QuizApp.Controllers;
 
@@ -50,8 +51,7 @@ public class SchoolbookController : Controller
         var rootFolder = Path.Combine(contentRoot, "Schoolbook");
 
         // Нормализуем путь и не допускаем выхода за пределы корневой папки.
-        var normalizedRelative = path.Replace('/', Path.DirectorySeparatorChar)
-                                     .Replace('\\', Path.DirectorySeparatorChar);
+        var normalizedRelative = PathHelper.Normalize(path);
 
         var fullPath = Path.GetFullPath(Path.Combine(rootFolder, normalizedRelative));
         var rootFullPath = Path.GetFullPath(rootFolder);
@@ -82,18 +82,7 @@ public class SchoolbookController : Controller
         var tree = SchoolbookTreeNode.BuildFromDirectory(rootFolder);
 
         // Нормализуем путь папки из query-параметра, чтобы он совпадал с FolderPath.
-        string currentFolderPath;
-        if (string.IsNullOrWhiteSpace(folder))
-        {
-            currentFolderPath = string.Empty;
-        }
-        else
-        {
-            var normalized = folder
-                .Replace('\\', Path.DirectorySeparatorChar)
-                .Replace('/', Path.DirectorySeparatorChar);
-            currentFolderPath = normalized;
-        }
+        var currentFolderPath = string.IsNullOrWhiteSpace(folder) ? string.Empty : PathHelper.Normalize(folder);
 
         // Собираем файлы из выбранной папки и всех её подпапок.
         var filesInFolder = new List<SchoolbookFile>();
@@ -123,17 +112,7 @@ public class SchoolbookController : Controller
             CollectFiles(tree, false);
         }
 
-        string display;
-        if (string.IsNullOrEmpty(currentFolderPath))
-        {
-            display = "Все учебники";
-        }
-        else
-        {
-            var parts = currentFolderPath
-                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-            display = string.Join(" / ", parts);
-        }
+        var display = PathHelper.ToDisplayPath(currentFolderPath, "Все учебники");
 
         return new SchoolbookIndexViewModel
         {

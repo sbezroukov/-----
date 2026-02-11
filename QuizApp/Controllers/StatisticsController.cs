@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Models;
+using QuizApp.Services;
 
 namespace QuizApp.Controllers;
 
@@ -11,33 +11,23 @@ namespace QuizApp.Controllers;
 public class StatisticsController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly IAuthService _authService;
 
-    public StatisticsController(ApplicationDbContext db)
+    public StatisticsController(ApplicationDbContext db, IAuthService authService)
     {
         _db = db;
+        _authService = authService;
     }
 
     public async Task<IActionResult> Index(int? userId = null)
     {
         var isAdmin = User.IsInRole("Admin");
-        var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        int? currentUserId = int.TryParse(currentUserIdClaim, out var uid) ? uid : null;
-
+        var currentUserId = _authService.GetCurrentUserId();
         if (currentUserId == null)
             return RedirectToAction("Login", "Account");
 
-        // Обычный пользователь видит только свою статистику
+        // Админ может смотреть другого пользователя (userId), иначе — только себя.
         var targetUserId = isAdmin && userId.HasValue ? userId.Value : currentUserId.Value;
-
-        if (isAdmin && userId.HasValue && userId.Value != currentUserId.Value)
-        {
-            // Админ смотрит другого пользователя
-        }
-        else if (!isAdmin)
-        {
-            // Не-админ всегда видит только себя
-            targetUserId = currentUserId.Value;
-        }
 
         var vm = new StatisticsViewModel
         {

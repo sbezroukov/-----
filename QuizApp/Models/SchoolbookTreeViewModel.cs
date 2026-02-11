@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuizApp.Utils;
 
 namespace QuizApp.Models;
 
@@ -22,6 +23,8 @@ public class SchoolbookFile
 /// </summary>
 public class SchoolbookTreeNode
 {
+    private static readonly string[] AllowedExtensions = { ".pdf", ".doc", ".docx", ".epub", ".djvu", ".fb2", ".txt" };
+
     /// <summary>Имя категории (папки) или пусто для корня.</summary>
     public string Name { get; set; } = string.Empty;
 
@@ -33,15 +36,6 @@ public class SchoolbookTreeNode
 
     /// <summary>Файлы PDF, лежащие непосредственно в этой папке (не в подпапках).</summary>
     public List<SchoolbookFile> Files { get; set; } = new();
-
-    private static string NormalizePath(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return path;
-        return path.Replace('\\', Path.DirectorySeparatorChar)
-                   .Replace('/', Path.DirectorySeparatorChar);
-    }
-
-    private static readonly string[] AllowedExtensions = { ".pdf", ".doc", ".docx", ".epub", ".djvu", ".fb2", ".txt" };
 
     /// <summary>
     /// Строит дерево по содержимому папки Schoolbook.
@@ -70,8 +64,7 @@ public class SchoolbookTreeNode
 
         foreach (var file in allFiles)
         {
-            var relativeFilePath = Path.GetRelativePath(rootFolder, file);
-            relativeFilePath = NormalizePath(relativeFilePath);
+            var relativeFilePath = PathHelper.Normalize(Path.GetRelativePath(rootFolder, file));
 
             var dir = Path.GetDirectoryName(relativeFilePath);
             if (string.IsNullOrEmpty(dir)) dir = "";
@@ -126,8 +119,7 @@ public class SchoolbookTreeNode
         // Добавляем файлы к соответствующим узлам
         foreach (var file in allFiles)
         {
-            var relativeFilePath = Path.GetRelativePath(rootFolder, file);
-            relativeFilePath = NormalizePath(relativeFilePath);
+            var relativeFilePath = PathHelper.Normalize(Path.GetRelativePath(rootFolder, file));
 
             var dir = Path.GetDirectoryName(relativeFilePath);
             if (string.IsNullOrEmpty(dir)) dir = "";

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Hosting;
+using QuizApp.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QuizApp.Data;
@@ -53,7 +54,7 @@ public class TestFileService : ITestFileService
         }
     }
 
-    public void SyncTopicsFromFiles()
+    public void SyncTopicsFromFiles(bool force = false)
     {
         if (!Directory.Exists(_testsFolder))
         {
@@ -104,7 +105,7 @@ public class TestFileService : ITestFileService
     public IReadOnlyList<QuestionModel> LoadQuestionsForTopic(Topic topic)
     {
         // FileName хранит относительный путь (в т.ч. с подпапками)
-        var path = Path.Combine(_testsFolder, topic.FileName.Replace('\\', Path.DirectorySeparatorChar));
+        var path = Path.Combine(_testsFolder, PathHelper.Normalize(topic.FileName));
         var (_, questions) = ParseFile(path);
         return questions;
     }

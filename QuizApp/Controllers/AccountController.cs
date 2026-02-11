@@ -1,79 +1,76 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Models;
+using QuizApp.Services;
 
 namespace QuizApp.Controllers;
 
 public class AccountController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly IAuthService _authService;
 
-    public AccountController(ApplicationDbContext db)
+    public AccountController(ApplicationDbContext db, IAuthService authService)
     {
         _db = db;
+        _authService = authService;
     }
 
     [HttpGet]
-    public IActionResult Register()
-    {
-        return View();
-    }
+    public IActionResult Register() => View(new RegisterViewModel());
 
     [HttpPost]
-    public async Task<IActionResult> Register(string userName, string password)
+    public async Task<IActionResult> Register(RegisterViewModel model)
     {
-        if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
-        {
-            ModelState.AddModelError(string.Empty, "Введите логин и пароль.");
-            return View();
-        }
+        if (!ModelState.IsValid)
+            return View(model);
 
-        var exists = await _db.Users.AnyAsync(u => u.UserName == userName);
+        var exists = await _db.Users.AnyAsync(u => u.UserName == model.UserName);
         if (exists)
         {
             ModelState.AddModelError(string.Empty, "Пользователь с таким логином уже существует.");
-            return View();
+            return View(model);
         }
 
         var user = new ApplicationUser
         {
-            UserName = userName,
-            Password = password // по заданию — без шифрования
+            UserName = model.UserName,
+            Password = model.Password
         };
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        await SignInUser(user, "User");
+        await _authService.SignInAsync(user, "User");
         return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
-        ViewBag.ReturnUrl = returnUrl;
-        return View();
+        return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string userName, string password, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
-        var user = await _db.Users.SingleOrDefaultAsync(u => u.UserName == userName && u.Password == password);
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var user = await _db.Users.SingleOrDefaultAsync(u => u.UserName == model.UserName && u.Password == model.Password);
         if (user == null)
         {
             ModelState.AddModelError(string.Empty, "Неверный логин или пароль.");
-            return View();
+            return View(model);
         }
 
-        await SignInUser(user, "User");
+        await _authService.SignInAsync(user, "User");
 
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            return Redirect(returnUrl);
+        var redirectUrl = model.ReturnUrl ?? returnUrl;
+        if (!string.IsNullOrEmpty(redirectUrl) && Url.IsLocalUrl(redirectUrl))
+            return Redirect(redirectUrl);
 
         return RedirectToAction("Index", "Home");
     }
@@ -81,39 +78,25 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await _authService.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
 
     [Authorize]
     public async Task<IActionResult> History()
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        var userId = _authService.GetCurrentUserId();
+        if (userId == null)
             return RedirectToAction("Login");
+
         var attempts = await _db.Attempts
             .Include(a => a.Topic)
             .Include(a => a.User)
-            .Where(a => a.UserId == userId)
+            .Where(a => a.UserId == userId.Value)
             .OrderByDescending(a => a.StartedAt)
             .ToListAsync();
 
         return View(attempts);
-    }
-
-    private async Task SignInUser(ApplicationUser user, string role)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.UserName),
-            new(ClaimTypes.Role, role)
-        };
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
     }
 }
 

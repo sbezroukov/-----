@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
+using QuizApp.Utils;
 
 namespace QuizApp.Models;
 
@@ -34,15 +35,6 @@ public class Topic
     };
 
     /// <summary>
-    /// Нормализует путь к разделителю текущей ОС (в БД пути хранятся с \ для совместимости).
-    /// </summary>
-    private static string NormalizePath(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return path;
-        return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-    }
-
-    /// <summary>
     /// Путь для отображения: категории и название теста, например "География / Урок 5 / test".
     /// </summary>
     [NotMapped]
@@ -50,10 +42,9 @@ public class Topic
     {
         get
         {
-            var dir = Path.GetDirectoryName(NormalizePath(FileName));
+            var dir = Path.GetDirectoryName(PathHelper.Normalize(FileName));
             if (string.IsNullOrEmpty(dir)) return Title;
-            var pathParts = dir.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join(" / ", pathParts) + " / " + Title;
+            return PathHelper.ToDisplayPath(dir, Title) + " / " + Title;
         }
     }
 
@@ -61,7 +52,7 @@ public class Topic
     /// Путь папки (категории) без имени файла, для группировки в дереве.
     /// </summary>
     [NotMapped]
-    public string FolderPath => Path.GetDirectoryName(NormalizePath(FileName)) ?? string.Empty;
+    public string FolderPath => Path.GetDirectoryName(PathHelper.Normalize(FileName)) ?? string.Empty;
 
     /// <summary>
     /// Разрешена ли тема для прохождения обычным пользователям.

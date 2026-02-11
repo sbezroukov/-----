@@ -1,14 +1,11 @@
 using System.IO;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Models;
 using QuizApp.Services;
+using QuizApp.Utils;
 
 namespace QuizApp.Controllers;
 
@@ -18,17 +15,23 @@ public class AdminController : Controller
     private readonly ApplicationDbContext _db;
     private readonly IConfiguration _configuration;
     private readonly ITestFileService _testFileService;
+    private readonly ITestImportService _testImportService;
+    private readonly IAuthService _authService;
     private readonly IWebHostEnvironment _env;
 
     public AdminController(
         ApplicationDbContext db,
         IConfiguration configuration,
         ITestFileService testFileService,
+        ITestImportService testImportService,
+        IAuthService authService,
         IWebHostEnvironment env)
     {
         _db = db;
         _configuration = configuration;
         _testFileService = testFileService;
+        _testImportService = testImportService;
+        _authService = authService;
         _env = env;
     }
 
@@ -36,47 +39,40 @@ public class AdminController : Controller
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
-        ViewBag.ReturnUrl = returnUrl;
-        return View();
+        return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 
     [AllowAnonymous]
     [HttpPost]
-    public async Task<IActionResult> Login(string userName, string password, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
+        if (!ModelState.IsValid)
+            return View(model);
+
         var adminUser = _configuration["Admin:Username"];
         var adminPassword = _configuration["Admin:Password"];
 
-        if (userName == adminUser && password == adminPassword)
+        if (model.UserName == adminUser && model.Password == adminPassword)
         {
-            var admin = await _db.Users.FirstOrDefaultAsync(u => u.UserName == userName);
+            var admin = await _db.Users.FirstOrDefaultAsync(u => u.UserName == model.UserName);
             if (admin == null)
             {
-                admin = new ApplicationUser { UserName = userName, Password = "" };
+                admin = new ApplicationUser { UserName = model.UserName, Password = "" };
                 _db.Users.Add(admin);
                 await _db.SaveChangesAsync();
             }
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
-                new Claim(ClaimTypes.Name, userName),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
+            await _authService.SignInAsync(admin, "Admin");
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
+            var redirectUrl = model.ReturnUrl ?? returnUrl;
+            if (!string.IsNullOrEmpty(redirectUrl) && Url.IsLocalUrl(redirectUrl))
+                return Redirect(redirectUrl);
 
             return RedirectToAction("Index");
         }
 
         ModelState.AddModelError(string.Empty, "Неверный логин или пароль администратора.");
-        return View();
+        return View(model);
     }
 
     public async Task<IActionResult> Index(string? folder = null, bool? includeSubfolders = null)
@@ -103,8 +99,7 @@ public class AdminController : Controller
         var allTopics = await _db.Topics.OrderBy(t => t.Title).ToListAsync();
         var tree = TestTreeNode.BuildTree(allTopics);
 
-        string currentFolderPath = string.IsNullOrWhiteSpace(folder) ? string.Empty
-            : folder.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        string currentFolderPath = string.IsNullOrWhiteSpace(folder) ? string.Empty : PathHelper.Normalize(folder);
 
         var topicsInFolder = allTopics.AsEnumerable();
         if (!string.IsNullOrEmpty(currentFolderPath))
@@ -126,9 +121,7 @@ public class AdminController : Controller
             ["TreeRoot"] = tree,
             ["CurrentFolderPath"] = currentFolderPath ?? string.Empty,
             ["IncludeSubfolders"] = includeSubfolders ?? true,
-            ["FolderDisplay"] = string.IsNullOrEmpty(currentFolderPath)
-                ? "Все темы"
-                : string.Join(" / ", currentFolderPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+            ["FolderDisplay"] = PathHelper.ToDisplayPath(currentFolderPath ?? string.Empty, "Все темы")
         };
 
         return (topicsInFolder.ToList(), viewData);
@@ -158,7 +151,7 @@ public class AdminController : Controller
         if (string.IsNullOrWhiteSpace(folderPath))
             return BadRequest();
 
-        var normalized = folderPath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        var normalized = PathHelper.Normalize(folderPath);
         var prefix = normalized + Path.DirectorySeparatorChar;
 
         var topics = await _db.Topics.ToListAsync();
@@ -237,42 +230,23 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ParseImportText(string importText)
     {
-        var (items, errors) = ParseImportFormat(importText ?? "");
-        var itemsDto = items.Select(x => new { path = x.Path, content = x.Content }).ToList();
-        return Json(new { items = itemsDto, errors });
+        var result = _testImportService.Parse(importText ?? "");
+        var itemsDto = result.Items.Select(x => new { path = x.Path, content = x.Content }).ToList();
+        return Json(new { items = itemsDto, errors = result.Errors });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateFromImportText(string importText)
     {
-        var (items, errors) = ParseImportFormat(importText ?? "");
-        if (errors.Count > 0)
-            return Json(new { success = false, message = "Ошибки разбора: " + string.Join("; ", errors) });
+        var parseResult = _testImportService.Parse(importText ?? "");
+        if (parseResult.Errors.Count > 0)
+            return Json(new { success = false, message = "Ошибки разбора: " + string.Join("; ", parseResult.Errors) });
 
-        var testsFolder = Path.Combine(_env.ContentRootPath, "tests");
-        var created = new List<string>();
-        var failed = new List<string>();
-
-        foreach (var item in items)
-        {
-            var fullPath = Path.Combine(testsFolder, item.Path.Replace('/', Path.DirectorySeparatorChar));
-            var dir = Path.GetDirectoryName(fullPath)!;
-            try
-            {
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
-                await System.IO.File.WriteAllTextAsync(fullPath, item.Content, System.Text.Encoding.UTF8);
-                created.Add(item.Path);
-            }
-            catch (Exception ex)
-            {
-                failed.Add($"{item.Path}: {ex.Message}");
-            }
-        }
+        var (created, failed) = await _testImportService.CreateFilesAsync(parseResult.Items);
 
         if (created.Count > 0)
-            _testFileService.SyncTopicsFromFiles();
+            _testFileService.SyncTopicsFromFiles(force: true);
 
         var message = created.Count > 0
             ? $"Тесты успешно созданы! Создано файлов: {created.Count}"
@@ -284,52 +258,6 @@ public class AdminController : Controller
             failed,
             message
         });
-    }
-
-    private static (List<(string Path, string Content)> items, List<string> errors) ParseImportFormat(string text)
-    {
-        var items = new List<(string Path, string Content)>();
-        var errors = new List<string>();
-        var blocks = Regex.Split(text, @"(?m)^==+\s*$", RegexOptions.Multiline);
-
-        foreach (var block in blocks)
-        {
-            var trimmed = block.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed)) continue;
-
-            var firstLineEnd = trimmed.IndexOf('\n');
-            var firstLine = firstLineEnd >= 0 ? trimmed.Substring(0, firstLineEnd).Trim() : trimmed;
-            if (!firstLine.StartsWith("ФАЙЛ:", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add($"Блок без ФАЙЛ:: \"{firstLine.Substring(0, Math.Min(50, firstLine.Length))}...\"");
-                continue;
-            }
-
-            var path = firstLine.Substring(5).Trim(':', ' ', '\t');
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                errors.Add("Пустой путь в ФАЙЛ:");
-                continue;
-            }
-            if (!path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
-                path += ".txt";
-            if (path.Contains("..") || path.StartsWith("/") || path.StartsWith("\\"))
-            {
-                errors.Add($"Недопустимый путь: {path}");
-                continue;
-            }
-
-            var content = firstLineEnd >= 0 ? trimmed.Substring(firstLineEnd + 1).Trim() : "";
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                errors.Add($"Пустое содержимое для {path}");
-                continue;
-            }
-
-            items.Add((path, content));
-        }
-
-        return (items, errors);
     }
 
     public async Task<IActionResult> History()
