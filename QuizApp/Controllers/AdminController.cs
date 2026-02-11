@@ -49,14 +49,23 @@ public class AdminController : Controller
 
         if (userName == adminUser && password == adminPassword)
         {
+            var admin = await _db.Users.FirstOrDefaultAsync(u => u.UserName == userName);
+            if (admin == null)
+            {
+                admin = new ApplicationUser { UserName = userName, Password = "" };
+                _db.Users.Add(admin);
+                await _db.SaveChangesAsync();
+            }
+
             var claims = new[]
             {
-                new System.Security.Claims.Claim(ClaimTypes.Name, userName),
-                new System.Security.Claims.Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
+                new Claim(ClaimTypes.Name, userName),
+                new Claim(ClaimTypes.Role, "Admin")
             };
 
-            var identity = new System.Security.Claims.ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 

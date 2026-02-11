@@ -222,7 +222,9 @@ namespace QuizApp.Controllers;
                 Message = "Файл теста не найден или повреждён. Проверьте, что исходный .txt файл существует в папке tests."
             });
         }
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            return RedirectToAction("Login", "Account");
 
         var attempt = new TestAttempt
         {
@@ -274,7 +276,7 @@ namespace QuizApp.Controllers;
             for (int i = 0; i < questions.Count; i++)
             {
                 var q = questions[i];
-                var value = Request.Form[$"q{i}"];
+                var value = Request.Form[$"q{i}"].ToString();
                 resultDetails.Add(new
                 {
                     Question = q.Text,

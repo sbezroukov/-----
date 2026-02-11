@@ -88,7 +88,9 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> History()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            return RedirectToAction("Login");
         var attempts = await _db.Attempts
             .Include(a => a.Topic)
             .Include(a => a.User)

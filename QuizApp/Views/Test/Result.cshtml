@@ -1,6 +1,20 @@
 @model QuizApp.Models.TestAttempt
 @using System.Text.Json
 
+@functions {
+    string? GetJsonString(JsonElement elem, string prop)
+    {
+        if (!elem.TryGetProperty(prop, out var val)) return null;
+        if (val.ValueKind == JsonValueKind.String) return val.GetString();
+        if (val.ValueKind == JsonValueKind.Array)
+        {
+            var parts = val.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() : e.ToString()).Where(s => !string.IsNullOrEmpty(s));
+            return string.Join("\n", parts);
+        }
+        return val.ToString();
+    }
+}
+
 @{
     ViewData["Title"] = "Результат";
     var details = ViewBag.Details as System.Collections.IEnumerable;
@@ -99,8 +113,8 @@ else
                         }
                         else if (topic.Type == QuizApp.Models.TopicType.Open)
                         {
-                            var answer = elem.TryGetProperty("Answer", out var ans) ? ans.GetString() : "Нет ответа";
-                            var correct = elem.TryGetProperty("Correct", out var cor) ? cor.GetString() : null;
+                            var answer = GetJsonString(elem, "Answer") ?? "Нет ответа";
+                            var correct = GetJsonString(elem, "Correct");
                             var scorePercent = elem.TryGetProperty("ScorePercent", out var sp) && sp.ValueKind == JsonValueKind.Number ? sp.GetDouble() : (double?)null;
                             <td>
                                 @if (string.IsNullOrWhiteSpace(answer))
