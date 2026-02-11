@@ -19,6 +19,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="mock://C:/HomeRepositories/-----/QuizApp/Controllers/AccountController.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/HomeRepositories/-----/QuizApp/Views/Admin/ImportTests.cshtml" root0="FORCE_HIGHLIGHTING" root1="FORCE_HIGHLIGHTING" root2="SKIP_HIGHLIGHTING" />
     <setting file="mock://C:/HomeRepositories/-----/QuizApp/Views/Shared/_Layout.cshtml" root0="FORCE_HIGHLIGHTING" root1="FORCE_HIGHLIGHTING" root2="SKIP_HIGHLIGHTING" />
     <setting file="mock://C:/HomeRepositories/-----/QuizApp/Views/Test/_TestFolderContent.cshtml" root0="FORCE_HIGHLIGHTING" root1="FORCE_HIGHLIGHTING" root2="SKIP_HIGHLIGHTING" />
   </component>
@@ -85,7 +86,7 @@
       <option name="presentableId" value="Default" />
       <updated>1770812374619</updated>
       <workItem from="1770812375759" duration="2609000" />
-      <workItem from="1770815203708" duration="6689000" />
+      <workItem from="1770815203708" duration="7602000" />
     </task>
     <servers />
   </component>

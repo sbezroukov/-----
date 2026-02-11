@@ -1,0 +1,166 @@
+@model QuizApp.Models.StatisticsViewModel
+@{
+    ViewData["Title"] = Model.IsAdmin ? "Статистика" : "Моя статистика";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<p class="text-muted">
+    Учитываются только тесты с вариантами ответов (категория «Тестирование»).
+</p>
+
+@if (Model.IsAdmin)
+{
+    <div class="mb-4">
+        <form method="get" asp-action="Index" class="d-inline-flex align-items-center gap-2">
+            <label for="userId" class="form-label mb-0">Пользователь:</label>
+            <select name="userId" id="userId" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                @foreach (var u in Model.UserDropdown)
+                {
+                    if (Model.SelectedUserId == u.Id)
+                    {
+                        <option value="@u.Id" selected>@u.UserName</option>
+                    }
+                    else
+                    {
+                        <option value="@u.Id">@u.UserName</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Сводка по всем пользователям</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th>Пройдено тестов</th>
+                            <th>Всего попыток</th>
+                            <th>Средний % успеха</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.AllUsersSummary)
+                        {
+                            <tr class="@(Model.SelectedUserId == u.UserId ? "table-active" : "")">
+                                <td>@u.UserName</td>
+                                <td>@u.UniqueTestsCount</td>
+                                <td>@u.TotalAttemptsCount</td>
+                                <td>
+                                    <span class="badge @(u.AvgScorePercent >= 70 ? "bg-success" : u.AvgScorePercent >= 50 ? "bg-warning" : "bg-secondary")">
+                                        @($"{u.AvgScorePercent:F1} %")
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-action="Index" asp-route-userId="@u.UserId" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.AllUsersSummary.Any())
+            {
+                <p class="text-muted mb-0">Нет данных о прохождении тестов.</p>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.CurrentUserStats != null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            @if (Model.IsAdmin)
+            {
+                <span>Статистика пользователя: @Model.CurrentUserStats.UserName</span>
+            }
+            else
+            {
+                <span>Ваша статистика</span>
+            }
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <div class="display-6">@Model.CurrentUserStats.UniqueTestsCount</div>
+                            <div class="text-muted small">пройдено тестов</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <div class="display-6">@Model.CurrentUserStats.TotalAttemptsCount</div>
+                            <div class="text-muted small">всего попыток</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <div class="display-6">
+                                <span class="badge @(Model.CurrentUserStats.AvgScorePercent >= 70 ? "bg-success" : Model.CurrentUserStats.AvgScorePercent >= 50 ? "bg-warning" : "bg-secondary")" style="font-size: 1.5rem;">
+                                    @($"{Model.CurrentUserStats.AvgScorePercent:F1} %")
+                                </span>
+                            </div>
+                            <div class="text-muted small">средний процент успеха</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3">Детализация по тестам</h5>
+            @if (Model.CurrentUserStats.TestStats.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Тест</th>
+                                <th>Попыток</th>
+                                <th>Средний %</th>
+                                <th>Лучший результат</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.CurrentUserStats.TestStats)
+                            {
+                                <tr>
+                                    <td title="@t.DisplayPath">@t.TopicTitle</td>
+                                    <td>@t.AttemptsCount</td>
+                                    <td>
+                                        <span class="badge @(t.AvgScorePercent >= 70 ? "bg-success" : t.AvgScorePercent >= 50 ? "bg-warning" : "bg-secondary")">
+                                            @($"{t.AvgScorePercent:F1} %")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (t.BestScorePercent.HasValue)
+                                        {
+                                            <span class="badge bg-primary">@($"{t.BestScorePercent:F1} %")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">Пользователь пока не проходил тесты с вариантами ответов.</p>
+            }
+        </div>
+    </div>
+}

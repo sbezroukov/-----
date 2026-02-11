@@ -47,6 +47,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Account" asp-action="History">История</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Statistics" asp-action="Index">@(User.IsInRole("Admin") ? "Статистика" : "Моя статистика")</a>
+                            </li>
                             <li class="nav-item d-flex align-items-center">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-link nav-link text-white px-0">Выход</button>
