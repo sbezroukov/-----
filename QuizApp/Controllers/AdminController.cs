@@ -81,22 +81,22 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Index(string? folder = null, bool? includeSubfolders = null)
     {
-        var (topicsInFolder, viewBag) = await BuildAdminIndexData(folder, includeSubfolders);
-        foreach (var (key, value) in viewBag)
-            ViewBag[key] = value;
+        var (topicsInFolder, viewData) = await BuildAdminIndexData(folder, includeSubfolders);
+        foreach (var (key, value) in viewData)
+            ViewData[key] = value;
         return View(topicsInFolder);
     }
 
     [HttpGet]
     public async Task<IActionResult> Folder(string? folder = null, bool? includeSubfolders = null)
     {
-        var (topicsInFolder, viewBag) = await BuildAdminIndexData(folder, includeSubfolders);
-        foreach (var (key, value) in viewBag)
-            ViewBag[key] = value;
+        var (topicsInFolder, viewData) = await BuildAdminIndexData(folder, includeSubfolders);
+        foreach (var (key, value) in viewData)
+            ViewData[key] = value;
         return PartialView("_AdminFolderContent", topicsInFolder);
     }
 
-    private async Task<(List<Topic> TopicsInFolder, Dictionary<string, object> ViewBag)> BuildAdminIndexData(string? folder, bool? includeSubfolders)
+    private async Task<(List<Topic> TopicsInFolder, Dictionary<string, object> ViewData)> BuildAdminIndexData(string? folder, bool? includeSubfolders)
     {
         _testFileService.SyncTopicsFromFiles();
 
@@ -119,7 +119,7 @@ public class AdminController : Controller
         var totalUsers = await _db.Users.CountAsync();
         var totalAttempts = await _db.Attempts.CountAsync();
 
-        var viewBag = new Dictionary<string, object>
+        var viewData = new Dictionary<string, object>
         {
             ["TotalUsers"] = totalUsers,
             ["TotalAttempts"] = totalAttempts,
@@ -131,7 +131,7 @@ public class AdminController : Controller
                 : string.Join(" / ", currentFolderPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
         };
 
-        return (topicsInFolder.ToList(), viewBag);
+        return (topicsInFolder.ToList(), viewData);
     }
 
     [HttpPost]
