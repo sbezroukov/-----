@@ -8,9 +8,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0876370c-369b-44c8-bb1c-50f65f58b844" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.QuizApp/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.QuizApp/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="0876370c-369b-44c8-bb1c-50f65f58b844" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,6 +19,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="mock://C:/HomeRepositories/-----/QuizApp/Controllers/AccountController.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/HomeRepositories/-----/QuizApp/Views/Shared/_Layout.cshtml" root0="FORCE_HIGHLIGHTING" root1="FORCE_HIGHLIGHTING" root2="SKIP_HIGHLIGHTING" />
     <setting file="mock://C:/HomeRepositories/-----/QuizApp/Views/Test/_TestFolderContent.cshtml" root0="FORCE_HIGHLIGHTING" root1="FORCE_HIGHLIGHTING" root2="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
@@ -86,7 +85,7 @@
       <option name="presentableId" value="Default" />
       <updated>1770812374619</updated>
       <workItem from="1770812375759" duration="2609000" />
-      <workItem from="1770815203708" duration="3768000" />
+      <workItem from="1770815203708" duration="4091000" />
     </task>
     <servers />
   </component>
