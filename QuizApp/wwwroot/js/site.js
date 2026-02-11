@@ -3,7 +3,7 @@
 
 // Pjax: загрузка контента по ссылкам меню без полной перезагрузки страницы
 (function () {
-    var container = document.querySelector('.container, .container-fluid');
+    var container = document.getElementById('main-container');
     var navLinks = document.querySelectorAll('.navbar a[href].nav-link, .navbar a[href].navbar-brand');
     
     if (!container || !navLinks.length) return;
@@ -22,14 +22,7 @@
             .then(function (html) {
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(html, 'text/html');
-                var newContainers = doc.querySelectorAll('.container, .container-fluid');
-                var newContainer = null;
-                for (var i = 0; i < newContainers.length; i++) {
-                    if (newContainers[i].querySelector('main')) {
-                        newContainer = newContainers[i];
-                        break;
-                    }
-                }
+                var newContainer = doc.getElementById('main-container');
                 if (!newContainer) return;
                 
                 container.className = newContainer.className;

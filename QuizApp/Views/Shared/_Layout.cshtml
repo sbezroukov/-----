@@ -70,7 +70,7 @@
             </div>
         </nav>
     </header>
-    <div class="@((ViewData["FullWidth"] as bool?) == true ? "container-fluid" : "container")">
+    <div id="main-container" class="@((ViewData["FullWidth"] as bool?) == true ? "container-fluid" : "container")">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
