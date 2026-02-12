@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homecenter-config
+  namespace: default
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  Qwen__Enabled: "true"
+  Qwen__Model: "qwen-turbo"
+  Qwen__BaseUrl: "https://dashscope-intl.aliyuncs.com/api/v1"
+  ConnectionStrings__DefaultConnection: "Data Source=/app/data/quiz.db"

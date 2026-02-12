@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homecenter
+  namespace: default
+  labels:
+    app: homecenter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homecenter
+  template:
+    metadata:
+      labels:
+        app: homecenter
+    spec:
+      containers:
+        - name: homecenter
+          image: homecenter:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: homecenter-config
+          env:
+            - name: Admin__Username
+              valueFrom:
+                secretKeyRef:
+                  name: homecenter-secrets
+                  key: admin-username
+            - name: Admin__Password
+              valueFrom:
+                secretKeyRef:
+                  name: homecenter-secrets
+                  key: admin-password
+            - name: Qwen__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: homecenter-secrets
+                  key: qwen-api-key
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: homecenter-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homecenter
+  namespace: default
+spec:
+  selector:
+    app: homecenter
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP

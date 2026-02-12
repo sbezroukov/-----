@@ -7,3 +7,4 @@ appsettings.Development.json
 appsettings.Local.json
 appsettings.*.local.json
 *.secrets.json
+k8s/secret.yaml
