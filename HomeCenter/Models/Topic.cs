@@ -59,6 +59,11 @@ public class Topic
     /// </summary>
     public bool IsEnabled { get; set; }
 
+    /// <summary>
+    /// Отмечен как удалённый (файл отсутствует на диске или удалён админом).
+    /// </summary>
+    public bool IsDeleted { get; set; }
+
     public ICollection<TestAttempt> Attempts { get; set; } = new List<TestAttempt>();
 }
 

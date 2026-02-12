@@ -18,6 +18,7 @@ public class AdminController : Controller
     private readonly ITestImportService _testImportService;
     private readonly IAuthService _authService;
     private readonly IWebHostEnvironment _env;
+    private readonly ITestHistoryService _historyService;
 
     public AdminController(
         ApplicationDbContext db,
@@ -25,7 +26,8 @@ public class AdminController : Controller
         ITestFileService testFileService,
         ITestImportService testImportService,
         IAuthService authService,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        ITestHistoryService historyService)
     {
         _db = db;
         _configuration = configuration;
@@ -33,6 +35,7 @@ public class AdminController : Controller
         _testImportService = testImportService;
         _authService = authService;
         _env = env;
+        _historyService = historyService;
     }
 
     [AllowAnonymous]
@@ -96,7 +99,7 @@ public class AdminController : Controller
     {
         _testFileService.SyncTopicsFromFiles();
 
-        var allTopics = await _db.Topics.OrderBy(t => t.Title).ToListAsync();
+        var allTopics = await _db.Topics.OrderBy(t => t.Title).ToListAsync(); // включая удалённые
         var tree = TestTreeNode.BuildTree(allTopics);
 
         string currentFolderPath = string.IsNullOrWhiteSpace(folder) ? string.Empty : PathHelper.Normalize(folder);
@@ -323,6 +326,145 @@ public class AdminController : Controller
         ViewBag.HasScore = hasScore;
 
         return View(attempts);
+    }
+
+    /// <summary>
+    /// История версий тестов (добавление, изменение, удаление).
+    /// </summary>
+    public async Task<IActionResult> TestHistory(
+        string? fileName = null,
+        string? actionType = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        int page = 1,
+        int pageSize = 50)
+    {
+        var query = _db.TestHistory.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            var search = fileName.Trim().ToLower();
+            query = query.Where(h => h.FileName.ToLower().Contains(search) ||
+                (h.FolderPath != null && h.FolderPath.ToLower().Contains(search)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(actionType) && Enum.TryParse<TestHistoryActionType>(actionType, ignoreCase: true, out var act))
+        {
+            query = query.Where(h => h.Action == act);
+        }
+
+        if (dateFrom.HasValue)
+            query = query.Where(h => h.Timestamp >= dateFrom.Value.ToUniversalTime());
+
+        if (dateTo.HasValue)
+        {
+            var endOfDay = dateTo.Value.Date.AddDays(1).AddTicks(-1).ToUniversalTime();
+            query = query.Where(h => h.Timestamp <= endOfDay);
+        }
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(h => h.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        ViewBag.FileName = fileName;
+        ViewBag.ActionType = actionType;
+        ViewBag.DateFrom = dateFrom?.ToString("yyyy-MM-dd");
+        ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
+        ViewBag.Page = page;
+        ViewBag.PageSize = pageSize;
+        ViewBag.TotalCount = totalCount;
+        ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        return View(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteTopic(int id)
+    {
+        var topic = await _db.Topics.FindAsync(id);
+        if (topic == null)
+            return NotFound();
+
+        var lastContent = await _db.TestHistory
+            .Where(h => h.FileName == topic.FileName && h.Content != null)
+            .OrderByDescending(h => h.Timestamp)
+            .Select(h => h.Content)
+            .FirstOrDefaultAsync();
+
+        _db.Topics.Remove(topic);
+        await _db.SaveChangesAsync();
+
+        _historyService.LogDeletedFromDb(topic.FileName, lastContent);
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = true });
+
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteFolder(string folderPath, bool includeSubfolders)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath))
+            return BadRequest();
+
+        var normalized = PathHelper.Normalize(folderPath);
+        var prefix = normalized + Path.DirectorySeparatorChar;
+        var testsFolder = Path.Combine(_env.ContentRootPath, "tests");
+
+        var topics = await _db.Topics.ToListAsync();
+        var toDelete = topics.Where(t =>
+            t.FolderPath == normalized ||
+            (includeSubfolders && !string.IsNullOrEmpty(t.FolderPath) && t.FolderPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        var deletedFileNames = toDelete.Select(t => t.FileName).ToList();
+        foreach (var topic in toDelete)
+        {
+            var fullPath = Path.Combine(testsFolder, PathHelper.Normalize(topic.FileName));
+            if (System.IO.File.Exists(fullPath))
+            {
+                try
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+                catch
+                {
+                    // Продолжаем с остальными
+                }
+            }
+            _db.Topics.Remove(topic);
+        }
+
+        if (includeSubfolders)
+        {
+            var folderFullPath = Path.Combine(testsFolder, PathHelper.Normalize(folderPath));
+            if (System.IO.Directory.Exists(folderFullPath))
+            {
+                try
+                {
+                    System.IO.Directory.Delete(folderFullPath, recursive: true);
+                }
+                catch
+                {
+                    // Части удалены
+                }
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        if (deletedFileNames.Count > 0)
+            _historyService.LogFolderDeleted(normalized, deletedFileNames);
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = true, deleted = toDelete.Count });
+
+        return RedirectToAction("Index");
     }
 }
 

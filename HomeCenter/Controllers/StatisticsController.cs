@@ -36,7 +36,7 @@ public class StatisticsController : Controller
         };
 
         // Всего тестов с вариантами (enabled)
-        var totalTestsCount = await _db.Topics.CountAsync(t => t.Type == TopicType.Test && t.IsEnabled);
+        var totalTestsCount = await _db.Topics.CountAsync(t => t.Type == TopicType.Test && t.IsEnabled && !t.IsDeleted);
 
         // Только тесты с вариантами (MODE: Test, категория "Тестирование")
         var testAttempts = await _db.Attempts

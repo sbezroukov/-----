@@ -12,6 +12,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
+    DatabaseMigrator.EnsureVersioningSchema(db);
 
     var testService = scope.ServiceProvider.GetRequiredService<ITestFileService>();
     testService.SyncTopicsFromFiles();

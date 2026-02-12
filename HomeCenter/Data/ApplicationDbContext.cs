@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
     public DbSet<Topic> Topics => Set<Topic>();
     public DbSet<TestAttempt> Attempts => Set<TestAttempt>();
+    public DbSet<TestHistoryEntry> TestHistory => Set<TestHistoryEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +41,14 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Topic>()
             .Property(t => t.FileName)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<TestHistoryEntry>()
+            .Property(h => h.FileName)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<TestHistoryEntry>()
+            .Property(h => h.FolderPath)
             .HasMaxLength(500);
     }
 }

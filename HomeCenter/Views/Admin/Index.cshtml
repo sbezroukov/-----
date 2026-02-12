@@ -16,6 +16,7 @@
     Пользователей: @ViewBag.TotalUsers<br />
     Попыток прохождения: @ViewBag.TotalAttempts<br />
     <a asp-action="History" class="btn btn-info btn-sm mt-2">Просмотреть историю всех пользователей</a>
+    <a asp-action="TestHistory" class="btn btn-outline-info btn-sm mt-2">История тестов</a>
     <a asp-action="ImportTests" class="btn btn-outline-secondary btn-sm mt-2">Текстовый редактор тестов</a>
 </p>
 
@@ -116,6 +117,44 @@
                             loadFolder(folder, incl);
                         })
                         .catch(function () { alert('Не удалось изменить доступ.'); })
+                        .finally(function () { btn.disabled = false; });
+                }
+
+                var deleteTopicForm = e.target.closest('.js-delete-topic-form');
+                if (deleteTopicForm) {
+                    e.preventDefault();
+                    var msg = deleteTopicForm.getAttribute('data-confirm') || 'Удалить тест из БД?';
+                    if (!confirm(msg)) return;
+                    var btn = deleteTopicForm.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    fetch(deleteTopicForm.action, { method: 'POST', body: new FormData(deleteTopicForm), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(function (r) { return r.json(); })
+                        .then(function () {
+                            var data = container.querySelector('.admin-folder-data');
+                            var folder = data ? data.getAttribute('data-current-folder') || '' : '';
+                            var incl = data ? data.getAttribute('data-include-subfolders') !== 'false' : true;
+                            loadFolder(folder, incl);
+                        })
+                        .catch(function () { location.reload(); })
+                        .finally(function () { btn.disabled = false; });
+                }
+
+                var deleteFolderForm = e.target.closest('.js-delete-folder-form');
+                if (deleteFolderForm) {
+                    e.preventDefault();
+                    var msg = deleteFolderForm.getAttribute('data-confirm') || 'Удалить папку?';
+                    if (!confirm(msg)) return;
+                    var btn = deleteFolderForm.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    fetch(deleteFolderForm.action, { method: 'POST', body: new FormData(deleteFolderForm), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(function (r) { return r.json(); })
+                        .then(function () {
+                            var data = container.querySelector('.admin-folder-data');
+                            var folder = data ? data.getAttribute('data-current-folder') || '' : '';
+                            var incl = data ? data.getAttribute('data-include-subfolders') !== 'false' : true;
+                            loadFolder(folder, incl);
+                        })
+                        .catch(function () { location.reload(); })
                         .finally(function () { btn.disabled = false; });
                 }
             });

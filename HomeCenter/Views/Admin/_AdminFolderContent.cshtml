@@ -29,6 +29,13 @@
             <input type="hidden" name="enable" value="false" />
             <button type="submit" class="btn btn-sm btn-warning">Выключить все</button>
         </form>
+        <form asp-action="DeleteFolder" method="post" class="d-inline js-delete-folder-form"
+              data-confirm="Удалить всю папку @(folderDisplay) с диска и из БД?">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="folderPath" value="@currentFolder" />
+            <input type="hidden" name="includeSubfolders" value="@(includeSubfolders ? "true" : "false")" />
+            <button type="submit" class="btn btn-sm btn-outline-danger">Удалить папку</button>
+        </form>
     </div>
 }
 
@@ -39,24 +46,44 @@
                 <th>Тема</th>
                 <th>Файл</th>
                 <th>Тип</th>
-                <th>Доступна пользователям</th>
+                <th>Доступна</th>
+                <th>Статус</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             @foreach (var t in Model)
             {
-                <tr data-topic-id="@t.Id">
+                <tr data-topic-id="@t.Id" class="@(t.IsDeleted ? "table-secondary" : "")">
                     <td>@t.DisplayPath</td>
                     <td>@t.FileName</td>
                     <td>@t.TypeDisplayName</td>
                     <td class="js-access-status">@(t.IsEnabled ? "Да" : "Нет")</td>
                     <td>
-                        <form asp-action="ToggleTopic" method="post" class="d-inline js-toggle-form">
+                        @if (t.IsDeleted)
+                        {
+                            <span class="badge bg-danger">Удалён</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!t.IsDeleted)
+                        {
+                            <form asp-action="ToggleTopic" method="post" class="d-inline js-toggle-form">
+                                <input type="hidden" name="id" value="@t.Id" />
+                                <button type="submit" class="btn btn-sm @(t.IsEnabled ? "btn-warning" : "btn-success")">
+                                    @(t.IsEnabled ? "Сделать недоступной" : "Сделать доступной")
+                                </button>
+                            </form>
+                        }
+                        <form asp-action="DeleteTopic" method="post" class="d-inline js-delete-topic-form"
+                              data-confirm="Удалить тест «@t.Title» из БД?">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@t.Id" />
-                            <button type="submit" class="btn btn-sm @(t.IsEnabled ? "btn-warning" : "btn-success")">
-                                @(t.IsEnabled ? "Сделать недоступной" : "Сделать доступной")
-                            </button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Удалить из БД</button>
                         </form>
                     </td>
                 </tr>

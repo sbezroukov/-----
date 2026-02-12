@@ -35,14 +35,17 @@ public class TestFileService : ITestFileService
     private readonly ApplicationDbContext _db;
     private readonly string _testsFolder;
     private readonly ILogger<TestFileService> _logger;
+    private readonly ITestHistoryService _historyService;
 
     public TestFileService(
         ApplicationDbContext db,
         ILogger<TestFileService> logger,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        ITestHistoryService historyService)
     {
         _db = db;
         _logger = logger;
+        _historyService = historyService;
 
         // Папка tests теперь ищется относительно корня приложения (ContentRoot),
         // а не bin/Debug..., чтобы одинаково работать и локально, и в Docker.
@@ -62,17 +65,18 @@ public class TestFileService : ITestFileService
             return;
         }
 
+        var filesOnDisk = Directory.GetFiles(_testsFolder, "*.txt", SearchOption.AllDirectories)
+            .Select(f => NormalizeRelativePath(f))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         // Рекурсивно обходим папку tests и все подпапки (категории)
-        var files = Directory.GetFiles(_testsFolder, "*.txt", SearchOption.AllDirectories);
-        foreach (var file in files)
+        foreach (var file in Directory.GetFiles(_testsFolder, "*.txt", SearchOption.AllDirectories))
         {
-            // Относительный путь от папки tests (например "География\Урок 5\test.txt")
-            var relativePath = Path.GetRelativePath(_testsFolder, file);
-            if (Path.DirectorySeparatorChar != '\\')
-                relativePath = relativePath.Replace(Path.DirectorySeparatorChar, '\\');
+            var relativePath = NormalizeRelativePath(file);
 
             try
             {
+                var fileContent = File.ReadAllText(file);
                 var (type, _) = ParseFile(file);
 
                 var existing = _db.Topics.SingleOrDefault(t => t.FileName == relativePath);
@@ -84,14 +88,40 @@ public class TestFileService : ITestFileService
                         Title = title,
                         FileName = relativePath,
                         Type = type,
-                        IsEnabled = false // по умолчанию выключено, админ включает
+                        IsEnabled = false
                     };
                     _db.Topics.Add(topic);
+                    _db.SaveChanges();
+                    _historyService.LogAdded(relativePath, fileContent);
                 }
                 else
                 {
-                    existing.Title = Path.GetFileNameWithoutExtension(relativePath);
-                    existing.Type = type;
+                    if (existing.IsDeleted)
+                    {
+                        existing.IsDeleted = false;
+                        _db.SaveChanges();
+                        _historyService.LogAdded(relativePath, fileContent); // Восстановление
+                    }
+                    else
+                    {
+                        var lastContent = _db.TestHistory
+                            .Where(h => h.FileName == relativePath && h.Content != null)
+                            .OrderByDescending(h => h.Timestamp)
+                            .Select(h => h.Content)
+                            .FirstOrDefault();
+                        if (lastContent != fileContent)
+                        {
+                            existing.Title = Path.GetFileNameWithoutExtension(relativePath);
+                            existing.Type = type;
+                            _db.SaveChanges();
+                            _historyService.LogModified(relativePath, fileContent);
+                        }
+                        else
+                        {
+                            existing.Title = Path.GetFileNameWithoutExtension(relativePath);
+                            existing.Type = type;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -101,6 +131,32 @@ public class TestFileService : ITestFileService
         }
 
         _db.SaveChanges();
+
+        // Файлы, которые есть в БД, но отсутствуют на диске — помечаем как удалённые
+        var topicsInDb = _db.Topics.Where(t => !t.IsDeleted).ToList();
+        foreach (var topic in topicsInDb)
+        {
+            if (!filesOnDisk.Contains(topic.FileName))
+            {
+                topic.IsDeleted = true;
+                var lastContent = _db.TestHistory
+                    .Where(h => h.FileName == topic.FileName && h.Content != null)
+                    .OrderByDescending(h => h.Timestamp)
+                    .Select(h => h.Content)
+                    .FirstOrDefault();
+                _historyService.LogFileDeleted(topic.FileName, lastContent);
+            }
+        }
+
+        _db.SaveChanges();
+    }
+
+    private string NormalizeRelativePath(string fullPath)
+    {
+        var relativePath = Path.GetRelativePath(_testsFolder, fullPath);
+        if (Path.DirectorySeparatorChar != '\\')
+            relativePath = relativePath.Replace(Path.DirectorySeparatorChar, '\\');
+        return relativePath;
     }
 
     public IReadOnlyList<QuestionModel> LoadQuestionsForTopic(Topic topic)

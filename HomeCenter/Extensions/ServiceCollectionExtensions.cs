@@ -33,6 +33,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITestImportService, TestImportService>();
+        services.AddScoped<ITestHistoryService, TestHistoryService>();
 
         return services;
     }

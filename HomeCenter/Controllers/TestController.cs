@@ -42,7 +42,7 @@ public class TestController : Controller
         // Обновляем список тем из файлов при каждом заходе для подхвата новых/изменённых файлов.
         _testService.SyncTopicsFromFiles();
 
-        var allTopics = await _db.Topics.ToListAsync();
+        var allTopics = await _db.Topics.Where(t => !t.IsDeleted).ToListAsync();
         var enabledTopics = allTopics.Where(t => t.IsEnabled).ToList();
         var tree = TestTreeNode.BuildTree(allTopics);
 
@@ -264,6 +264,9 @@ public class TestController : Controller
         var topic = await _db.Topics.FindAsync(id);
         if (topic == null)
             return (NotAvailableView(id, "Тест не найден", "Такого теста нет (возможно, он был удалён или ещё не создан)."), null, null);
+
+        if (topic.IsDeleted)
+            return (NotAvailableView(id, "Тест удалён", "Этот тест был удалён и больше недоступен."), null, null);
 
         if (!topic.IsEnabled)
             return (NotAvailableView(id, "Тест отключён", "Этот тест сейчас выключен администратором и недоступен для прохождения."), null, null);

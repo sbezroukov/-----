@@ -1,0 +1,171 @@
+@model IEnumerable<HomeCenter.Models.TestHistoryEntry>
+@using HomeCenter.Models
+
+@{
+    ViewData["Title"] = "История тестов";
+    var fileName = ViewBag.FileName as string;
+    var actionType = ViewBag.ActionType as string;
+    var dateFrom = ViewBag.DateFrom as string;
+    var dateTo = ViewBag.DateTo as string;
+    var page = (int)(ViewBag.Page ?? 1);
+    var pageSize = (int)(ViewBag.PageSize ?? 50);
+    var totalCount = (int)(ViewBag.TotalCount ?? 0);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var sel = new Func<string, string>(v => actionType == v ? "selected" : "");
+    var selPage = new Func<int, string>(v => pageSize == v ? "selected" : "");
+}
+
+<h2>История изменений тестов</h2>
+
+<form method="get" asp-action="TestHistory" class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-md-3">
+                <label class="form-label small">Файл / путь</label>
+                <input type="text" name="fileName" value="@fileName" class="form-control form-control-sm" placeholder="Поиск по имени или пути" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">Действие</label>
+                <select name="actionType" class="form-select form-select-sm">
+                    <option value="">Все</option>
+                    <option value="Added" selected="@sel("Added")">Добавлен</option>
+                    <option value="Modified" selected="@sel("Modified")">Изменён</option>
+                    <option value="FileDeleted" selected="@sel("FileDeleted")">Файл удалён</option>
+                    <option value="DeletedFromDb" selected="@sel("DeletedFromDb")">Удалён из БД</option>
+                    <option value="FolderDeleted" selected="@sel("FolderDeleted")">Папка удалена</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">Дата с</label>
+                <input type="date" name="dateFrom" value="@dateFrom" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">Дата по</label>
+                <input type="date" name="dateTo" value="@dateTo" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">На странице</label>
+                <select name="pageSize" class="form-select form-select-sm">
+                    <option value="25" selected="@selPage(25)">25</option>
+                    <option value="50" selected="@selPage(50)">50</option>
+                    <option value="100" selected="@selPage(100)">100</option>
+                    <option value="200" selected="@selPage(200)">200</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+                <a asp-action="TestHistory" class="btn btn-outline-secondary btn-sm">Сбросить</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@functions {
+    string ActionDisplayName(TestHistoryActionType action)
+    {
+        return action switch
+        {
+            TestHistoryActionType.Added => "Добавлен",
+            TestHistoryActionType.Modified => "Изменён",
+            TestHistoryActionType.FileDeleted => "Файл удалён",
+            TestHistoryActionType.DeletedFromDb => "Удалён из БД",
+            TestHistoryActionType.FolderDeleted => "Папка удалена",
+            _ => action.ToString()
+        };
+    }
+
+    string ActionBadgeClass(TestHistoryActionType action)
+    {
+        return action switch
+        {
+            TestHistoryActionType.Added => "bg-success",
+            TestHistoryActionType.Modified => "bg-info",
+            TestHistoryActionType.FileDeleted => "bg-danger",
+            TestHistoryActionType.DeletedFromDb => "bg-warning text-dark",
+            TestHistoryActionType.FolderDeleted => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Записей не найдено.</p>
+}
+else
+{
+    <p class="text-muted small mb-2">Показано @Model.Count() из @totalCount</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Дата и время</th>
+                    <th>Действие</th>
+                    <th>Файл</th>
+                    <th>Папка</th>
+                    <th>Содержимое</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in Model)
+                {
+                    <tr>
+                        <td>@h.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                        <td><span class="badge @ActionBadgeClass(h.Action)">@ActionDisplayName(h.Action)</span></td>
+                        <td><code class="small">@h.FileName</code></td>
+                        <td>@(string.IsNullOrEmpty(h.FolderPath) ? "—" : h.FolderPath)</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(h.Content))
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#contentModal@(h.Id)">
+                                    Показать
+                                </button>
+                                <div class="modal fade" id="contentModal@(h.Id)" tabindex="-1">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">@h.FileName</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <pre class="mb-0 small" style="max-height: 70vh; overflow: auto;">@System.Net.WebUtility.HtmlEncode(h.Content)</pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination pagination-sm">
+                <li class="page-item @(page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="?fileName=@(fileName ?? "")&actionType=@(actionType ?? "")&dateFrom=@(dateFrom ?? "")&dateTo=@(dateTo ?? "")&page=@(page - 1)&pageSize=@pageSize">←</a>
+                </li>
+                @for (var p = Math.Max(1, page - 2); p <= Math.Min(totalPages, page + 2); p++)
+                {
+                    <li class="page-item @(p == page ? "active" : "")">
+                        <a class="page-link" href="?fileName=@(fileName ?? "")&actionType=@(actionType ?? "")&dateFrom=@(dateFrom ?? "")&dateTo=@(dateTo ?? "")&page=@p&pageSize=@pageSize">@p</a>
+                    </li>
+                }
+                <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                    <a class="page-link" href="?fileName=@(fileName ?? "")&actionType=@(actionType ?? "")&dateFrom=@(dateFrom ?? "")&dateTo=@(dateTo ?? "")&page=@(page + 1)&pageSize=@pageSize">→</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+<p class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Назад к админке</a>
+</p>
