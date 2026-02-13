@@ -44,7 +44,8 @@ sqlite3 HomeCenter/quiz.db
 ```sql
 -- Добавляем новые колонки
 ALTER TABLE Attempts ADD COLUMN GradingStatus INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT '2024-01-01 00:00:00';
+UPDATE Attempts SET LastUpdatedAt = COALESCE(CompletedAt, StartedAt) WHERE LastUpdatedAt = '2024-01-01 00:00:00';
 ALTER TABLE Attempts ADD COLUMN GradingError TEXT;
 ```
 

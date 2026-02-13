@@ -93,8 +93,26 @@ dotnet test --filter "Category=Integration"
 
 Подробнее: [docs/TESTING.md](docs/TESTING.md)
 
+## ✨ Новые возможности
+
+### Асинхронная обработка AI оценок
+- ✅ Результаты сохраняются **немедленно** — не нужно ждать AI
+- ✅ Обработка в **фоне** — автоматически каждые 5 секунд
+- ✅ Отслеживание **статуса** — видно когда обработка завершена
+- ✅ **Защита от потери** данных — ответы не теряются при сбоях AI
+
+### Глобальный индикатор загрузки
+- ✅ Автоматический показ для всех AJAX-запросов
+- ✅ Красивая анимация с размытием фона
+- ✅ Умное поведение — не мигает на быстрых запросах
+- ✅ Работает везде — fetch, jQuery AJAX, формы, Pjax
+
+Подробнее: [docs/ASYNC_GRADING.md](docs/ASYNC_GRADING.md), [docs/LOADING_INDICATOR.md](docs/LOADING_INDICATOR.md)
+
 ## Документация
 
 - **[docs/AI_SETUP.md](docs/AI_SETUP.md)** — настройка AI для автоматической оценки ответов
+- **[docs/ASYNC_GRADING.md](docs/ASYNC_GRADING.md)** — асинхронная обработка AI оценок
+- **[docs/LOADING_INDICATOR.md](docs/LOADING_INDICATOR.md)** — глобальный индикатор загрузки
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — настройка секретов, User Secrets, деплой в Kubernetes
 - **[docs/TESTING.md](docs/TESTING.md)** — запуск тестов

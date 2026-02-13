@@ -22,7 +22,8 @@ cd C:\HomeRepositories\HomeCenter
 
 # Примените миграцию к базе данных
 sqlite3 HomeCenter\quiz.db "ALTER TABLE Attempts ADD COLUMN GradingStatus INTEGER NOT NULL DEFAULT 0;"
-sqlite3 HomeCenter\quiz.db "ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT (datetime('now'));"
+sqlite3 HomeCenter\quiz.db "ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT '2024-01-01 00:00:00';"
+sqlite3 HomeCenter\quiz.db "UPDATE Attempts SET LastUpdatedAt = COALESCE(CompletedAt, StartedAt) WHERE LastUpdatedAt = '2024-01-01 00:00:00';"
 sqlite3 HomeCenter\quiz.db "ALTER TABLE Attempts ADD COLUMN GradingError TEXT;"
 ```
 
@@ -37,7 +38,8 @@ sqlite3 HomeCenter\quiz.db "ALTER TABLE Attempts ADD COLUMN GradingError TEXT;"
 
 ```sql
 ALTER TABLE Attempts ADD COLUMN GradingStatus INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT '2024-01-01 00:00:00';
+UPDATE Attempts SET LastUpdatedAt = COALESCE(CompletedAt, StartedAt) WHERE LastUpdatedAt = '2024-01-01 00:00:00';
 ALTER TABLE Attempts ADD COLUMN GradingError TEXT;
 ```
 
