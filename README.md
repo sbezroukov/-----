@@ -26,6 +26,22 @@ docker compose up -d --build
 
 Приложение доступно по http://localhost:8080
 
+## Запуск тестов
+
+```bash
+# Все тесты
+dotnet test
+
+# Только юнит-тесты (без интеграционных)
+dotnet test --filter "Category!=Integration"
+
+# Интеграционный тест Qwen (требует Qwen:ApiKey в appsettings.Development.json)
+dotnet test --filter "Category=Integration"
+```
+
+Подробнее: [docs/TESTING.md](docs/TESTING.md)
+
 ## Документация
 
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — настройка секретов, User Secrets, деплой в Kubernetes
+- **[docs/TESTING.md](docs/TESTING.md)** — запуск тестов
