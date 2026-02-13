@@ -37,6 +37,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITestHistoryService, TestHistoryService>();
         services.AddScoped<IOpenAnswerGradingService, OpenAnswerGradingService>();
 
+        // Регистрируем фоновый сервис для асинхронной обработки AI оценок
+        services.AddHostedService<BackgroundGradingService>();
+
         return services;
     }
 }

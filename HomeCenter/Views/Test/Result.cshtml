@@ -34,8 +34,54 @@ else
     <div class="card-body">
         <p class="mb-1"><strong>Пользователь:</strong> @(user?.UserName ?? "—")</p>
         <p class="mb-1"><strong>Дата прохождения:</strong> @Model.StartedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+        <p class="mb-1"><strong>Последнее обновление:</strong> @Model.LastUpdatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</p>
         <p class="mb-1"><strong>Тип теста:</strong> @topic.TypeDisplayName</p>
         <p class="mb-1"><strong>Всего вопросов:</strong> @Model.TotalQuestions</p>
+        
+        @if (topic.Type == HomeCenter.Models.TopicType.Open)
+        {
+            <p class="mb-1">
+                <strong>Статус обработки AI:</strong>
+                @switch (Model.GradingStatus)
+                {
+                    case HomeCenter.Models.GradingStatus.Pending:
+                        <span class="badge bg-warning">⏳ Ожидает обработки</span>
+                        <small class="text-muted ms-2">Ваши ответы сохранены. Оценка AI будет выполнена в течение нескольких секунд.</small>
+                        break;
+                    case HomeCenter.Models.GradingStatus.Processing:
+                        <span class="badge bg-info">⚙️ В обработке</span>
+                        <small class="text-muted ms-2">AI анализирует ваши ответы...</small>
+                        break;
+                    case HomeCenter.Models.GradingStatus.Completed:
+                        <span class="badge bg-success">✓ Обработано</span>
+                        break;
+                    case HomeCenter.Models.GradingStatus.Failed:
+                        <span class="badge bg-danger">✗ Ошибка обработки</span>
+                        break;
+                    default:
+                        <span class="badge bg-secondary">—</span>
+                        break;
+                }
+            </p>
+            
+            @if (Model.GradingStatus == HomeCenter.Models.GradingStatus.Failed && !string.IsNullOrEmpty(Model.GradingError))
+            {
+                <div class="alert alert-danger mb-1" role="alert">
+                    <strong>Ошибка AI:</strong> @Model.GradingError
+                </div>
+            }
+            
+            @if (Model.GradingStatus == HomeCenter.Models.GradingStatus.Pending || Model.GradingStatus == HomeCenter.Models.GradingStatus.Processing)
+            {
+                <div class="alert alert-info mb-1" role="alert">
+                    <strong>💡 Совет:</strong> Обновите страницу через несколько секунд, чтобы увидеть результаты оценки AI.
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="location.reload()">
+                        🔄 Обновить сейчас
+                    </button>
+                </div>
+            }
+        }
+        
         @if (Model.ScorePercent.HasValue)
         {
             <p class="mb-0">
@@ -43,7 +89,10 @@ else
                 <span class="badge @(Model.ScorePercent >= 70 ? "bg-success" : Model.ScorePercent >= 50 ? "bg-warning" : "bg-danger")">
                     @($"{Model.ScorePercent:F2} %")
                 </span>
-                (@Model.CorrectAnswers из @Model.TotalQuestions правильных)
+                @if (Model.CorrectAnswers.HasValue)
+                {
+                    <span>(@Model.CorrectAnswers из @Model.TotalQuestions правильных)</span>
+                }
             </p>
         }
         else

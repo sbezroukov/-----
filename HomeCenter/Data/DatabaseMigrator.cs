@@ -30,5 +30,36 @@ public static class DatabaseMigrator
                 Content TEXT,
                 Timestamp TEXT NOT NULL DEFAULT (datetime('now'))
             )");
+
+        // Добавляем колонки для асинхронной обработки AI оценок в Attempts
+        try
+        {
+            db.Database.ExecuteSqlRaw(
+                "ALTER TABLE Attempts ADD COLUMN GradingStatus INTEGER NOT NULL DEFAULT 0");
+        }
+        catch
+        {
+            // Колонка уже существует
+        }
+
+        try
+        {
+            db.Database.ExecuteSqlRaw(
+                "ALTER TABLE Attempts ADD COLUMN LastUpdatedAt TEXT NOT NULL DEFAULT (datetime('now'))");
+        }
+        catch
+        {
+            // Колонка уже существует
+        }
+
+        try
+        {
+            db.Database.ExecuteSqlRaw(
+                "ALTER TABLE Attempts ADD COLUMN GradingError TEXT");
+        }
+        catch
+        {
+            // Колонка уже существует
+        }
     }
 }

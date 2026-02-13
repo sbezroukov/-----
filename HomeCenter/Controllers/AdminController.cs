@@ -212,6 +212,12 @@ public class AdminController : Controller
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
+        
+        // Обновляем статус обработки (ручная оценка)
+        attempt.GradingStatus = GradingStatus.Completed;
+        attempt.LastUpdatedAt = DateTime.UtcNow;
+        attempt.GradingError = null;
+        
         await _db.SaveChangesAsync();
 
         return RedirectToAction("Result", "Test", new { id = attemptId });
@@ -265,6 +271,12 @@ public class AdminController : Controller
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         });
+        
+        // Обновляем статус обработки
+        attempt.GradingStatus = GradingStatus.Completed;
+        attempt.LastUpdatedAt = DateTime.UtcNow;
+        attempt.GradingError = null;
+        
         await _db.SaveChangesAsync();
 
         return RedirectToAction("Result", "Test", new { id = attemptId });

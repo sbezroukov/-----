@@ -209,6 +209,7 @@ public class TestController : Controller
 
             attempt.CorrectAnswers = null;
             attempt.ScorePercent = null;
+            attempt.GradingStatus = GradingStatus.Pending; // Устанавливаем статус "Ожидает обработки"
         }
         else // SelfStudy
         {
@@ -224,30 +225,8 @@ public class TestController : Controller
         _db.Attempts.Add(attempt);
         await _db.SaveChangesAsync();
 
-        if (topic!.Type == TopicType.Open && gradingItems != null && gradingItems.Count > 0)
-            {
-                var scores = await _gradingService.GradeAsync(topic, gradingItems);
-                if (scores != null && scores.Count > 0)
-                {
-                    var detailsList = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.Nodes.JsonObject>>(attempt.ResultJson!);
-                    if (detailsList != null)
-                    {
-                        for (var i = 0; i < Math.Min(detailsList.Count, scores.Count); i++)
-                        {
-                            if (scores[i].HasValue)
-                                detailsList[i]["ScorePercent"] = Math.Round(scores[i]!.Value, 2);
-                        }
-                        attempt.ResultJson = System.Text.Json.JsonSerializer.Serialize(detailsList, new JsonSerializerOptions
-                        {
-                            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        });
-                        var scoredCount = scores.Count(s => s.HasValue);
-                        if (scoredCount > 0)
-                            attempt.ScorePercent = Math.Round(scores.Where(s => s.HasValue).Average(s => s!.Value), 2);
-                        await _db.SaveChangesAsync();
-                    }
-                }
-            }
+        // Для открытых ответов обработка будет выполнена фоновым сервисом
+        // Сразу сохраняем попытку со статусом Pending, чтобы не потерять результаты
 
         return RedirectToAction("Result", new { id = attempt.Id });
     }
