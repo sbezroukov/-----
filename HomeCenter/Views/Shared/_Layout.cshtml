@@ -76,6 +76,17 @@
             </div>
         </nav>
     </header>
+    
+    <!-- Глобальный индикатор загрузки -->
+    <div id="global-loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <div class="loading-text mt-3">Загрузка...</div>
+        </div>
+    </div>
+    
     <div id="main-container" class="@((ViewData["FullWidth"] as bool?) == true ? "container-fluid" : "container")">
         <main role="main" class="pb-3">
             @RenderBody()

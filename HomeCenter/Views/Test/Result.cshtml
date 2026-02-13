@@ -75,10 +75,16 @@ else
             {
                 <div class="alert alert-info mb-1" role="alert">
                     <strong>💡 Совет:</strong> Обновите страницу через несколько секунд, чтобы увидеть результаты оценки AI.
-                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="location.reload()">
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="btnRefreshResults">
                         🔄 Обновить сейчас
                     </button>
                 </div>
+                <script>
+                    document.getElementById('btnRefreshResults').addEventListener('click', function() {
+                        if (window.LoadingIndicator) window.LoadingIndicator.show(true);
+                        location.reload();
+                    });
+                </script>
             }
         }
         
