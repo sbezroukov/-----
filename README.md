@@ -1,6 +1,10 @@
 # HomeCenter
 
-Приложение для тестирования, учебников и самопроверки.
+Приложение для тестирования, учебников и самопроверки с автоматической оценкой открытых ответов через AI.
+
+## 🚀 Быстрый старт с AI
+
+**Настройте автоматическую оценку ответов за 5 минут:** [QUICKSTART_AI.md](QUICKSTART_AI.md)
 
 ## Структура
 
@@ -26,6 +30,54 @@ docker compose up -d --build
 
 Приложение доступно по http://localhost:8080
 
+## Настройка AI для оценки открытых ответов
+
+Приложение поддерживает автоматическую оценку открытых ответов через AI. Доступны два провайдера:
+
+### OpenRouter (рекомендуется, бесплатные модели)
+
+1. Получите API ключ: https://openrouter.ai/keys
+2. Настройте `appsettings.Development.json`:
+
+```json
+{
+  "AI": {
+    "Provider": "OpenRouter",
+    "ApiKey": "sk-or-v1-ваш-ключ",
+    "Enabled": true,
+    "Model": "openrouter/free",
+    "BaseUrl": "https://openrouter.ai/api/v1"
+  }
+}
+```
+
+Доступные бесплатные модели:
+- `openrouter/free` (рекомендуется)
+- `openrouter/aurora-alpha`
+- `stepfun/step-3.5-flash:free`
+- `arcee-ai/trinity-large-preview:free`
+- `upstage/solar-pro-3:free`
+
+### Qwen (Alibaba DashScope)
+
+1. Получите API ключ: https://dashscope-intl.console.aliyun.com/
+2. Активируйте модели в консоли
+3. Настройте `appsettings.Development.json`:
+
+```json
+{
+  "AI": {
+    "Provider": "Qwen"
+  },
+  "Qwen": {
+    "ApiKey": "sk-ваш-ключ",
+    "Enabled": true,
+    "Model": "qwen-turbo",
+    "BaseUrl": "https://dashscope-intl.aliyuncs.com/api/v1"
+  }
+}
+```
+
 ## Запуск тестов
 
 ```bash
@@ -35,7 +87,7 @@ dotnet test
 # Только юнит-тесты (без интеграционных)
 dotnet test --filter "Category!=Integration"
 
-# Интеграционный тест Qwen (требует Qwen:ApiKey в appsettings.Development.json)
+# Интеграционный тест AI (требует настроенный AI провайдер)
 dotnet test --filter "Category=Integration"
 ```
 
@@ -43,5 +95,6 @@ dotnet test --filter "Category=Integration"
 
 ## Документация
 
+- **[docs/AI_SETUP.md](docs/AI_SETUP.md)** — настройка AI для автоматической оценки ответов
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — настройка секретов, User Secrets, деплой в Kubernetes
 - **[docs/TESTING.md](docs/TESTING.md)** — запуск тестов

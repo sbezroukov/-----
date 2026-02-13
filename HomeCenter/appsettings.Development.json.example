@@ -9,9 +9,16 @@
     "Username": "admin",
     "Password": "ЗАМЕНИТЕ_НА_СВОЙ_ПАРОЛЬ"
   },
-  "Qwen": {
-    "ApiKey": "ЗАМЕНИТЕ_НА_СВОЙ_API_KEY",
+  "AI": {
+    "Provider": "OpenRouter",
+    "ApiKey": "ЗАМЕНИТЕ_НА_СВОЙ_OPENROUTER_API_KEY",
     "Enabled": true,
+    "Model": "openrouter/free",
+    "BaseUrl": "https://openrouter.ai/api/v1"
+  },
+  "Qwen": {
+    "ApiKey": "ЗАМЕНИТЕ_НА_СВОЙ_QWEN_API_KEY",
+    "Enabled": false,
     "Model": "qwen-turbo",
     "BaseUrl": "https://dashscope-intl.aliyuncs.com/api/v1"
   }
