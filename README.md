@@ -213,10 +213,17 @@ cd HomeCenter
 
 ## Документация
 
+### Настройка и запуск
 - **[HomeCenter/DOCKER-SETUP.md](HomeCenter/DOCKER-SETUP.md)** — запуск в Docker, настройка переменных окружения
+- **[HomeCenter/ENV-SETUP-TEST.md](HomeCenter/ENV-SETUP-TEST.md)** — тестирование настройки .env файла
 - **[HomeCenter/BACKUP-GUIDE.md](HomeCenter/BACKUP-GUIDE.md)** — бэкап и восстановление SQLite в Docker Desktop
+
+### AI и оценка ответов
 - **[docs/AI_SETUP.md](docs/AI_SETUP.md)** — настройка AI для автоматической оценки ответов
+- **[HomeCenter/AI-LOGGING-GUIDE.md](HomeCenter/AI-LOGGING-GUIDE.md)** — подробное логирование AI запросов и диагностика
 - **[docs/ASYNC_GRADING.md](docs/ASYNC_GRADING.md)** — асинхронная обработка AI оценок
+
+### Разработка и деплой
 - **[docs/LOADING_INDICATOR.md](docs/LOADING_INDICATOR.md)** — глобальный индикатор загрузки
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — настройка секретов, User Secrets, деплой в Kubernetes
 - **[docs/TESTING.md](docs/TESTING.md)** — запуск тестов

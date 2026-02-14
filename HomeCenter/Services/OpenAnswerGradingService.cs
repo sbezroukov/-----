@@ -76,29 +76,46 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
             using var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(60);
 
-            var json = JsonSerializer.Serialize(requestBody);
+            var json = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions { WriteIndented = true });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Детальное логирование для администратора
+            _logger.LogInformation("=== Qwen API Request ===");
+            _logger.LogInformation("URL: {Url}", url);
+            _logger.LogInformation("Model: {Model}", model);
+            _logger.LogInformation("API Key: {ApiKey}", MaskApiKey(apiKey));
+            _logger.LogInformation("Request Body:\n{RequestBody}", json);
 
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + apiKey);
             request.Content = content;
 
+            var startTime = DateTime.UtcNow;
             using var response = await client.SendAsync(request, cancellationToken);
+            var duration = DateTime.UtcNow - startTime;
+
+            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            // Логирование ответа
+            _logger.LogInformation("=== Qwen API Response ===");
+            _logger.LogInformation("Status Code: {StatusCode}", response.StatusCode);
+            _logger.LogInformation("Duration: {Duration}ms", duration.TotalMilliseconds);
+            _logger.LogInformation("Response Body:\n{ResponseBody}", responseJson);
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogWarning("Qwen API error {StatusCode}: {Body}", response.StatusCode, body);
+                _logger.LogError("❌ Qwen API Error: {StatusCode}\nResponse: {Body}", response.StatusCode, responseJson);
                 return new List<double?>();
             }
 
-            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             var scores = ParseQwenScoresFromResponse(responseJson, items.Count);
+            _logger.LogInformation("✓ Qwen API Success: Parsed {Count} scores", scores.Count);
             return scores;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка вызова Qwen API для оценки открытых ответов");
+            _logger.LogError(ex, "❌ Ошибка вызова Qwen API для оценки открытых ответов\nTopic: {TopicTitle}\nItems Count: {ItemsCount}", 
+                topic.Title, items.Count);
             return new List<double?>();
         }
     }
@@ -132,8 +149,19 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
             using var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(60);
 
-            var json = JsonSerializer.Serialize(requestBody);
+            var json = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions { WriteIndented = true });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Детальное логирование для администратора
+            _logger.LogInformation("=== OpenRouter API Request ===");
+            _logger.LogInformation("URL: {Url}", url);
+            _logger.LogInformation("Model: {Model}", model);
+            _logger.LogInformation("API Key: {ApiKey}", MaskApiKey(apiKey));
+            _logger.LogInformation("Request Headers:");
+            _logger.LogInformation("  - Authorization: Bearer {ApiKey}", MaskApiKey(apiKey));
+            _logger.LogInformation("  - HTTP-Referer: https://github.com/HomeCenter");
+            _logger.LogInformation("  - X-Title: HomeCenter Quiz App");
+            _logger.LogInformation("Request Body:\n{RequestBody}", json);
 
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + apiKey);
@@ -141,22 +169,37 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
             request.Headers.TryAddWithoutValidation("X-Title", "HomeCenter Quiz App");
             request.Content = content;
 
+            var startTime = DateTime.UtcNow;
             using var response = await client.SendAsync(request, cancellationToken);
+            var duration = DateTime.UtcNow - startTime;
+
+            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            // Логирование ответа
+            _logger.LogInformation("=== OpenRouter API Response ===");
+            _logger.LogInformation("Status Code: {StatusCode}", response.StatusCode);
+            _logger.LogInformation("Duration: {Duration}ms", duration.TotalMilliseconds);
+            _logger.LogInformation("Response Headers:");
+            foreach (var header in response.Headers)
+            {
+                _logger.LogInformation("  - {Key}: {Value}", header.Key, string.Join(", ", header.Value));
+            }
+            _logger.LogInformation("Response Body:\n{ResponseBody}", responseJson);
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogWarning("OpenRouter API error {StatusCode}: {Body}", response.StatusCode, body);
+                _logger.LogError("❌ OpenRouter API Error: {StatusCode}\nResponse: {Body}", response.StatusCode, responseJson);
                 return new List<double?>();
             }
 
-            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             var scores = ParseOpenAIStyleScoresFromResponse(responseJson, items.Count);
+            _logger.LogInformation("✓ OpenRouter API Success: Parsed {Count} scores", scores.Count);
             return scores;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка вызова OpenRouter API для оценки открытых ответов");
+            _logger.LogError(ex, "❌ Ошибка вызова OpenRouter API для оценки открытых ответов\nTopic: {TopicTitle}\nItems Count: {ItemsCount}", 
+                topic.Title, items.Count);
             return new List<double?>();
         }
     }
@@ -197,7 +240,7 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
         return sb.ToString();
     }
 
-    private static IReadOnlyList<double?> ParseQwenScoresFromResponse(string responseJson, int expectedCount)
+    private IReadOnlyList<double?> ParseQwenScoresFromResponse(string responseJson, int expectedCount)
     {
         try
         {
@@ -221,15 +264,17 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
             else
                 text = "";
 
+            _logger.LogInformation("Extracted content from Qwen response: {Content}", text);
             return ExtractScoresFromText(text, expectedCount);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "❌ Failed to parse Qwen response\nResponse JSON: {ResponseJson}", responseJson);
             return new List<double?>();
         }
     }
 
-    private static IReadOnlyList<double?> ParseOpenAIStyleScoresFromResponse(string responseJson, int expectedCount)
+    private IReadOnlyList<double?> ParseOpenAIStyleScoresFromResponse(string responseJson, int expectedCount)
     {
         try
         {
@@ -242,25 +287,37 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
                 .GetProperty("content")
                 .GetString() ?? "";
 
+            _logger.LogInformation("Extracted content from OpenRouter response: {Content}", content);
             return ExtractScoresFromText(content, expectedCount);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "❌ Failed to parse OpenRouter response\nResponse JSON: {ResponseJson}", responseJson);
             return new List<double?>();
         }
     }
 
-    private static IReadOnlyList<double?> ExtractScoresFromText(string text, int expectedCount)
+    private IReadOnlyList<double?> ExtractScoresFromText(string text, int expectedCount)
     {
         // Ищем JSON-массив в ответе (модель может добавить пояснения)
         var match = Regex.Match(text, @"\[[\d\s,\.]+\]");
         if (!match.Success)
+        {
+            _logger.LogWarning("❌ No JSON array found in AI response. Text: {Text}", text);
             return new List<double?>();
+        }
 
         var arrayJson = match.Value;
+        _logger.LogInformation("Found JSON array in response: {ArrayJson}", arrayJson);
+        
         var scores = JsonSerializer.Deserialize<double[]>(arrayJson);
         if (scores == null || scores.Length == 0)
+        {
+            _logger.LogWarning("❌ Failed to deserialize scores array or array is empty");
             return new List<double?>();
+        }
+
+        _logger.LogInformation("Deserialized {Count} scores from AI response", scores.Length);
 
         var result = new List<double?>();
         for (var i = 0; i < expectedCount; i++)
@@ -268,6 +325,26 @@ public class OpenAnswerGradingService : IOpenAnswerGradingService
             var score = i < scores.Length ? Math.Clamp(scores[i], 0, 100) : (double?)null;
             result.Add(score);
         }
+        
+        if (scores.Length != expectedCount)
+        {
+            _logger.LogWarning("⚠️ Score count mismatch: expected {Expected}, got {Actual}", expectedCount, scores.Length);
+        }
+        
         return result;
+    }
+
+    /// <summary>
+    /// Маскирует API ключ для безопасного логирования (показывает первые 10 символов)
+    /// </summary>
+    private static string MaskApiKey(string apiKey)
+    {
+        if (string.IsNullOrEmpty(apiKey))
+            return "NOT_SET";
+        
+        if (apiKey.Length <= 10)
+            return apiKey.Substring(0, Math.Min(4, apiKey.Length)) + "***";
+        
+        return apiKey.Substring(0, 10) + "..." + new string('*', Math.Min(10, apiKey.Length - 10));
     }
 }
