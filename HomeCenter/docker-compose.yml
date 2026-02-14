@@ -18,20 +18,20 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/quiz.db
-      # Admin credentials
-      - Admin__Username=${ADMIN_USERNAME:-admin}
-      - Admin__Password=${ADMIN_PASSWORD:-change-me}
-      # AI Configuration
-      - AI__Provider=${AI_PROVIDER:-OpenRouter}
-      - AI__ApiKey=${AI_API_KEY}
-      - AI__Enabled=${AI_ENABLED:-true}
-      - AI__Model=${AI_MODEL:-openrouter/free}
-      - AI__BaseUrl=${AI_BASE_URL:-https://openrouter.ai/api/v1}
-      # Qwen Configuration (optional)
-      - Qwen__ApiKey=${QWEN_API_KEY}
-      - Qwen__Enabled=${QWEN_ENABLED:-false}
-      - Qwen__Model=${QWEN_MODEL:-qwen-turbo}
-      - Qwen__BaseUrl=${QWEN_BASE_URL:-https://dashscope-intl.aliyuncs.com/api/v1}
+      # Admin credentials (reads from .env file with Admin__Username format)
+      - Admin__Username=${Admin__Username:-admin}
+      - Admin__Password=${Admin__Password:-change-me}
+      # AI Configuration (reads from .env file with AI__ApiKey format)
+      - AI__Provider=${AI__Provider:-OpenRouter}
+      - AI__ApiKey=${AI__ApiKey}
+      - AI__Enabled=${AI__Enabled:-true}
+      - AI__Model=${AI__Model:-openrouter/free}
+      - AI__BaseUrl=${AI__BaseUrl:-https://openrouter.ai/api/v1}
+      # Qwen Configuration (optional, reads from .env file with Qwen__ApiKey format)
+      - Qwen__ApiKey=${Qwen__ApiKey}
+      - Qwen__Enabled=${Qwen__Enabled:-false}
+      - Qwen__Model=${Qwen__Model:-qwen-turbo}
+      - Qwen__BaseUrl=${Qwen__BaseUrl:-https://dashscope-intl.aliyuncs.com/api/v1}
 
 volumes:
   quizdb:

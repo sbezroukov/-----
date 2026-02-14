@@ -99,6 +99,15 @@ public class AdminController : Controller
         return PartialView("_AdminFolderContent", topicsInFolder);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> FolderTree(string? currentFolder = null)
+    {
+        var (_, viewData) = await BuildAdminIndexData(currentFolder, null);
+        ViewData["CurrentFolder"] = currentFolder;
+        var treeRoot = viewData["TreeRoot"] as TestTreeNode;
+        return PartialView("_AdminFolderTree", (treeRoot, 0, currentFolder));
+    }
+
     private async Task<(List<Topic> TopicsInFolder, Dictionary<string, object> ViewData)> BuildAdminIndexData(string? folder, bool? includeSubfolders)
     {
         _testFileService.SyncTopicsFromFiles();

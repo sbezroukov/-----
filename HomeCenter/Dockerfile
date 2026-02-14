@@ -16,6 +16,8 @@ COPY --from=build /app/publish .
 COPY tests ./tests
 COPY Schoolbook ./Schoolbook
 COPY TEST-IMPORT-FORMAT.md .
+# Copy .env file if it exists (for configuration)
+COPY .env* ./
 VOLUME ["/app/data"]
 ENTRYPOINT ["dotnet", "HomeCenter.dll"]
 

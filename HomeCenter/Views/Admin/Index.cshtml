@@ -29,10 +29,12 @@
                     <a href="#" class="text-decoration-none js-admin-folder-link @(string.IsNullOrEmpty(currentFolder) ? "fw-semibold" : "")"
                        data-folder="" data-include-subfolders="true">Все темы</a>
                 </div>
-                @if (treeRoot != null)
-                {
-                    @await Html.PartialAsync("_AdminFolderTree", (treeRoot, 0, currentFolder))
-                }
+                <div id="admin-folder-tree">
+                    @if (treeRoot != null)
+                    {
+                        @await Html.PartialAsync("_AdminFolderTree", (treeRoot, 0, currentFolder))
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -49,9 +51,24 @@
     <script>
         (function () {
             var baseUrl = '@Url.Action("Folder", "Admin")';
+            var treeUrl = '@Url.Action("FolderTree", "Admin")';
             var container = document.getElementById('admin-folder-content');
+            var treeContainer = document.getElementById('admin-folder-tree');
 
-            function loadFolder(folder, includeSubfolders) {
+            function updateFolderTree(currentFolder) {
+                if (!treeContainer) return Promise.resolve();
+                var url = treeUrl + '?currentFolder=' + encodeURIComponent(currentFolder || '');
+                return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { return r.text(); })
+                    .then(function (html) {
+                        treeContainer.innerHTML = html;
+                    })
+                    .catch(function (err) { 
+                        console.error('Failed to update folder tree:', err);
+                    });
+            }
+
+            function loadFolder(folder, includeSubfolders, updateTree) {
                 if (!container) return;
                 var url = baseUrl + '?folder=' + encodeURIComponent(folder || '') + '&includeSubfolders=' + (includeSubfolders !== false);
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -67,6 +84,11 @@
                                 if (l.classList.contains('btn')) l.classList.add('active');
                             }
                         });
+                        
+                        // Обновить дерево папок если требуется
+                        if (updateTree) {
+                            return updateFolderTree(folder);
+                        }
                     })
                     .catch(function () { location.reload(); });
             }
@@ -133,7 +155,10 @@
                             var data = container.querySelector('.admin-folder-data');
                             var folder = data ? data.getAttribute('data-current-folder') || '' : '';
                             var incl = data ? data.getAttribute('data-include-subfolders') !== 'false' : true;
-                            loadFolder(folder, incl);
+                            // Обновляем дерево папок и контент
+                            updateFolderTree(folder).then(function() {
+                                loadFolder(folder, incl, false);
+                            });
                         })
                         .catch(function () { location.reload(); })
                         .finally(function () { btn.disabled = false; });
@@ -148,11 +173,12 @@
                     btn.disabled = true;
                     fetch(deleteFolderForm.action, { method: 'POST', body: new FormData(deleteFolderForm), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                         .then(function (r) { return r.json(); })
-                        .then(function () {
-                            var data = container.querySelector('.admin-folder-data');
-                            var folder = data ? data.getAttribute('data-current-folder') || '' : '';
-                            var incl = data ? data.getAttribute('data-include-subfolders') !== 'false' : true;
-                            loadFolder(folder, incl);
+                        .then(function (data) {
+                            // После удаления папки переходим на "Все темы"
+                            // и обновляем дерево папок
+                            updateFolderTree('').then(function() {
+                                loadFolder('', true, false);
+                            });
                         })
                         .catch(function () { location.reload(); })
                         .finally(function () { btn.disabled = false; });
