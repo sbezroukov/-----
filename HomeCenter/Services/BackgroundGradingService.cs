@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Text.Json;
 
 namespace HomeCenter.Services;
@@ -120,7 +121,7 @@ public class BackgroundGradingService : BackgroundService
                 var answer = detail.TryGetProperty("Answer", out var a) ? a.GetString() : "";
                 var correct = detail.TryGetProperty("Correct", out var c) ? c.GetString() : "";
 
-                _logger.LogInformation("Question {Index}: {Question}", i + 1, question?.Substring(0, Math.Min(50, question.Length ?? 0)) + "...");
+                _logger.LogInformation("Question {Index}: {Question}", i + 1, question != null && question.Length > 0 ? question.Substring(0, Math.Min(50, question.Length)) + "..." : "");
 
                 gradingItems.Add(new GradingItem
                 {
@@ -132,6 +133,12 @@ public class BackgroundGradingService : BackgroundService
 
             // Вызываем AI для оценки
             _logger.LogInformation("Calling AI grading service for {Count} items...", gradingItems.Count);
+            
+            if (attempt.Topic == null)
+            {
+                throw new InvalidOperationException("Topic is null");
+            }
+            
             var scores = await gradingService.GradeAsync(attempt.Topic, gradingItems, cancellationToken);
 
             if (scores == null || scores.Count == 0)
