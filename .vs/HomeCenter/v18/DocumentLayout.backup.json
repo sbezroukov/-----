@@ -1,0 +1,136 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "F:\\Repository\\HomeCenter\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\views\\admin\\testhistory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\views\\admin\\testhistory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\docker-update.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\docker-update.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\services\\openanswergradingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\services\\openanswergradingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|f:\\repository\\homecenter\\homecenter\\controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1ED71C1A-E9B6-489D-9770-513C2684E72D}|HomeCenter\\HomeCenter.csproj|solutionrelative:homecenter\\controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20BAE1A2-63FC-46FA-BDD5-C0DBB2B0618A}|HomeCenter.Tests\\HomeCenter.Tests.csproj|f:\\repository\\homecenter\\homecenter.tests\\openanswergradingserviceintegrationtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20BAE1A2-63FC-46FA-BDD5-C0DBB2B0618A}|HomeCenter.Tests\\HomeCenter.Tests.csproj|solutionrelative:homecenter.tests\\openanswergradingserviceintegrationtests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TestHistory.cshtml",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\Views\\Admin\\TestHistory.cshtml",
+              "RelativeDocumentMoniker": "HomeCenter\\Views\\Admin\\TestHistory.cshtml",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\Views\\Admin\\TestHistory.cshtml",
+              "RelativeToolTip": "HomeCenter\\Views\\Admin\\TestHistory.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAADgv7IAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-02-14T14:48:24.483Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "HomeCenter\\appsettings.Development.json",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\appsettings.Development.json",
+              "RelativeToolTip": "HomeCenter\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-14T14:13:07.3Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DOCKER-UPDATE.md",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\DOCKER-UPDATE.md",
+              "RelativeDocumentMoniker": "HomeCenter\\DOCKER-UPDATE.md",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\DOCKER-UPDATE.md",
+              "RelativeToolTip": "HomeCenter\\DOCKER-UPDATE.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-02-14T14:11:38.164Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\appsettings.json",
+              "RelativeDocumentMoniker": "HomeCenter\\appsettings.json",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\appsettings.json",
+              "RelativeToolTip": "HomeCenter\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-02-13T11:43:08.873Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "OpenAnswerGradingService.cs",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\Services\\OpenAnswerGradingService.cs",
+              "RelativeDocumentMoniker": "HomeCenter\\Services\\OpenAnswerGradingService.cs",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\Services\\OpenAnswerGradingService.cs",
+              "RelativeToolTip": "HomeCenter\\Services\\OpenAnswerGradingService.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAAIwCAAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-13T10:46:48.99Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TestController.cs",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter\\Controllers\\TestController.cs",
+              "RelativeDocumentMoniker": "HomeCenter\\Controllers\\TestController.cs",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter\\Controllers\\TestController.cs",
+              "RelativeToolTip": "HomeCenter\\Controllers\\TestController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAYwC4BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-13T11:36:09.729Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "OpenAnswerGradingServiceIntegrationTests.cs",
+              "DocumentMoniker": "F:\\Repository\\HomeCenter\\HomeCenter.Tests\\OpenAnswerGradingServiceIntegrationTests.cs",
+              "RelativeDocumentMoniker": "HomeCenter.Tests\\OpenAnswerGradingServiceIntegrationTests.cs",
+              "ToolTip": "F:\\Repository\\HomeCenter\\HomeCenter.Tests\\OpenAnswerGradingServiceIntegrationTests.cs",
+              "RelativeToolTip": "HomeCenter.Tests\\OpenAnswerGradingServiceIntegrationTests.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAkwBQAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-13T10:42:04.827Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
