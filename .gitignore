@@ -2,6 +2,9 @@
 bin/
 obj/
 
+#vs
+.vs/
+
 # Secrets and local configuration
 appsettings.Production.json
 appsettings.Local.json
@@ -9,3 +12,4 @@ appsettings.*.local.json
 *.secrets.json
 .env
 k8s/secret.yaml
+
